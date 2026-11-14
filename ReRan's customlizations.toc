@@ -1,0 +1,18 @@
+## Interface: 120100, 16001
+## Title: ReRan's Customlizations
+## Notes: ReRan's World of Warcraft customizations.
+## Author: ReRan
+## Version: 0.11.0
+## SavedVariablesPerCharacter: ReRansCustomlizationsDB
+## OptionalDeps: Blizzard_CooldownViewer, SharedMedia
+
+Core.lua
+Modules/Autoburn.lua
+Modules/NameplateDebuffs.lua
+Modules/MarkerAssignment.lua
+Modules/BigWigsBarHider.lua
+Modules/MeetingStoneBlocker.lua
+Modules/CooldownViewerSounds.lua
+Modules/PartyInterruptMonitor.lua
+Modules/AutoInvite.lua
+Config.lua
