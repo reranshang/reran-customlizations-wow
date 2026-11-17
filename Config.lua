@@ -42,6 +42,18 @@ local function InitializeDatabase()
     if type(ReRansCustomlizationsDB) ~= "table" then
         ReRansCustomlizationsDB = {}
     end
+    if type(ReRansCustomlizationsAccountDB) ~= "table" then
+        ReRansCustomlizationsAccountDB = {}
+    end
+    -- 账号设置首次出现时继承当前角色；后续角色不覆盖已经保存的账号配置。
+    for _, key in ipairs({ "bigwigsBarHider", "cooldownViewerSounds", "partyInterruptMonitor",
+        "autoInvite", "cdmColors" }) do
+        if type(ReRansCustomlizationsAccountDB[key]) ~= "table"
+            and type(ReRansCustomlizationsDB[key]) == "table" then
+            ReRansCustomlizationsAccountDB[key] = ReRansCustomlizationsDB[key]
+        end
+        ReRansCustomlizationsDB[key] = nil
+    end
 
     if ns.IsForever then
         if type(ReRansCustomlizationsDB.autoburn) ~= "table" then
@@ -53,13 +65,17 @@ local function InitializeDatabase()
     end
     ns.NameplateDebuffs.InitializeSettings(ReRansCustomlizationsDB)
     ns.MarkerAssignment.InitializeSettings(ReRansCustomlizationsDB)
-    ns.BigWigsBarHider.InitializeSettings(ReRansCustomlizationsDB)
+    ns.BigWigsBarHider.InitializeSettings(ReRansCustomlizationsAccountDB)
     if not ns.IsForever then
         ns.MeetingStoneBlocker.InitializeSettings(ReRansCustomlizationsDB)
     end
-    ns.CooldownViewerSounds.InitializeSettings(ReRansCustomlizationsDB)
-    ns.PartyInterruptMonitor.InitializeSettings(ReRansCustomlizationsDB)
-    ns.AutoInvite.InitializeSettings(ReRansCustomlizationsDB)
+    ns.CooldownViewerSounds.InitializeSettings(ReRansCustomlizationsAccountDB)
+    ns.PartyInterruptMonitor.InitializeSettings(ReRansCustomlizationsAccountDB)
+    ns.AutoInvite.InitializeSettings(ReRansCustomlizationsAccountDB)
+    ns.CDMColors.InitializeSettings(ReRansCustomlizationsAccountDB)
+    -- 清理已移除的 CDM 图标颜色设置
+    ReRansCustomlizationsAccountDB.cooldownViewerIconColors = nil
+    ReRansCustomlizationsDB.cooldownViewerIconColors = nil
     -- 清理已移除的旧版集合石过滤数据
     ReRansCustomlizationsDB.meetingStoneFilter = nil
     ReRansCustomlizationsDB.msFilterDebugLog = nil
@@ -88,6 +104,9 @@ local function CreateColorOption(parent, labelText, offsetY,
     local button = CreateFrame("Button", nil, parent)
     button:SetSize(42, 20)
     button:SetPoint("LEFT", label, "RIGHT", 12, 0)
+    local background = CreateSolidTexture(button, "BACKGROUND", 0.16, 0.16, 0.16, 1)
+    background:SetPoint("TOPLEFT", 2, -2)
+    background:SetPoint("BOTTOMRIGHT", -2, 2)
     local swatch = CreateSolidTexture(button, "ARTWORK", 1, 1, 1, 1)
     swatch:SetPoint("TOPLEFT", 2, -2)
     swatch:SetPoint("BOTTOMRIGHT", -2, 2)
@@ -96,16 +115,17 @@ local function CreateColorOption(parent, labelText, offsetY,
 
     function button:Refresh()
         local color = targetSettings[settingKey]
-        self.swatch:SetColorTexture(color.r, color.g, color.b, 1)
+        self.swatch:SetColorTexture(color.r, color.g, color.b, color.a or 1)
     end
 
     button:SetScript("OnClick", function(self)
         local color = targetSettings[settingKey]
-        local original = { r = color.r, g = color.g, b = color.b }
+        local original = { r = color.r, g = color.g, b = color.b, a = color.a or 1 }
 
-        local function ApplyPickerColor(red, green, blue)
+        local function ApplyPickerColor()
+            local red, green, blue = ColorPickerFrame:GetColorRGB()
             targetSettings[settingKey] = NormalizeColor({
-                r = red, g = green, b = blue,
+                r = red, g = green, b = blue, a = ColorPickerFrame:GetColorAlpha(),
             }, original)
             self:Refresh()
             onChanged()
@@ -116,10 +136,10 @@ local function CreateColorOption(parent, labelText, offsetY,
             r = color.r,
             g = color.g,
             b = color.b,
-            hasOpacity = false,
-            swatchFunc = function()
-                ApplyPickerColor(ColorPickerFrame:GetColorRGB())
-            end,
+            hasOpacity = true,
+            opacity = color.a or 1,
+            swatchFunc = ApplyPickerColor,
+            opacityFunc = ApplyPickerColor,
             cancelFunc = function()
                 targetSettings[settingKey] = original
                 self:Refresh()
@@ -1171,17 +1191,6 @@ local function CreateMarkerAssignmentPage(content)
     markerEnabledLabel:SetPoint("LEFT", markerEnabledCheckButton, "RIGHT", 2, 0)
     markerEnabledLabel:SetText("开启")
 
-    local markerOverwriteCheckButton = CreateFrame("CheckButton", nil, thirdPage,
-        "UICheckButtonTemplate")
-    markerOverwriteCheckButton:SetPoint("TOPLEFT", 120, -36)
-    markerOverwriteCheckButton:SetChecked(markerSettings.overwriteExistingMarkers)
-    markerOverwriteCheckButton:SetScript("OnClick", function(self)
-        MarkerAssignment.SetOverwriteExistingMarkers(self:GetChecked())
-    end)
-    local markerOverwriteLabel = thirdPage:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    markerOverwriteLabel:SetPoint("LEFT", markerOverwriteCheckButton, "RIGHT", 2, 0)
-    markerOverwriteLabel:SetText("覆盖已有标记")
-
     local markerHelpText = thirdPage:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     markerHelpText:SetPoint("TOPLEFT", 4, -76)
     markerHelpText:SetPoint("RIGHT", -4, 0)
@@ -1277,31 +1286,15 @@ local function CreateMarkerAssignmentPage(content)
     markerAllowInRaidLabel:SetPoint("LEFT", markerAllowInRaidCheckButton, "RIGHT", 2, 0)
     markerAllowInRaidLabel:SetText("在团队中也执行标记和喊话")
 
-    local markerChatTextLabel = thirdPage:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    markerChatTextLabel:SetPoint("TOPLEFT", 4, -280)
-    markerChatTextLabel:SetText("喊话内容")
-    local markerChatTextInput = CreateFrame("EditBox", nil, thirdPage, "InputBoxTemplate")
-    markerChatTextInput:SetPoint("TOPLEFT", 112, -274)
-    markerChatTextInput:SetPoint("TOPRIGHT", -4, -274)
-    markerChatTextInput:SetHeight(26)
-    markerChatTextInput:SetAutoFocus(false)
-    markerChatTextInput:SetMaxBytes(MarkerAssignment.CHAT_TEXT_MAX_BYTES)
-    markerChatTextInput:SetText(markerSettings.chatText)
-    markerChatTextInput:SetScript("OnTextChanged", function(self, userInput)
-        if userInput then MarkerAssignment.SetChatText(self:GetText()) end
-    end)
-    markerChatTextInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    markerChatTextInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-
     local markerStatusText = thirdPage:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    markerStatusText:SetPoint("TOPLEFT", 4, -314)
-    markerStatusText:SetPoint("TOPRIGHT", -4, -314)
+    markerStatusText:SetPoint("TOPLEFT", 4, -274)
+    markerStatusText:SetPoint("TOPRIGHT", -4, -274)
     markerStatusText:SetJustifyH("LEFT")
     markerStatusText:SetJustifyV("TOP")
 
     local markerMacroHelp = thirdPage:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    markerMacroHelp:SetPoint("TOPLEFT", 4, -352)
-    markerMacroHelp:SetPoint("TOPRIGHT", -4, -352)
+    markerMacroHelp:SetPoint("TOPLEFT", 4, -312)
+    markerMacroHelp:SetPoint("TOPRIGHT", -4, -312)
     markerMacroHelp:SetJustifyH("LEFT")
     markerMacroHelp:SetText("RRC 会在战斗外创建或更新账号通用宏 RRC-TM；关闭功能后保留宏的最后内容。")
 
@@ -1310,8 +1303,6 @@ local function CreateMarkerAssignmentPage(content)
         markerButtons = markerButtons,
         chatChannelDropdown = markerChannelDropdown,
         allowInRaidCheckButton = markerAllowInRaidCheckButton,
-        overwriteExistingMarkersCheckButton = markerOverwriteCheckButton,
-        chatTextInput = markerChatTextInput,
     }, markerCurrentText, markerStatusText)
 
     return {
@@ -1319,8 +1310,6 @@ local function CreateMarkerAssignmentPage(content)
         Refresh = function()
             MarkerAssignment.RefreshUI()
         end,
-        CloseEditors = function() markerChatTextInput:ClearFocus() end,
-        OnConfigHide = function() markerChatTextInput:ClearFocus() end,
     }
 end
 
@@ -1459,140 +1448,90 @@ local function CreateCooldownViewerSoundsPage(content)
     }
 end
 
-local function CreatePartyInterruptMonitorPage(content)
-    local PartyInterruptMonitor = ns.PartyInterruptMonitor
-    local settings = PartyInterruptMonitor.GetSettings()
-    local size = PartyInterruptMonitor.SIZE
-    local seventhPage = CreateFrame("Frame", nil, content)
-    seventhPage:SetAllPoints()
+local function CreateCDMColorsPage(content)
+    local CDMColors = ns.CDMColors
+    local settings = CDMColors.GetSettings()
+    local page = CreateFrame("Frame", nil, content)
+    page:SetAllPoints()
 
-    local leftPanel = CreateFrame("Frame", nil, seventhPage)
-    leftPanel:SetPoint("TOPLEFT")
-    leftPanel:SetPoint("BOTTOMLEFT")
-    leftPanel:SetWidth(210)
-    local rightPanel = CreateFrame("Frame", nil, seventhPage)
-    rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 12, 0)
-    rightPanel:SetPoint("BOTTOMRIGHT")
-
-    local controls, positionControls = {}, {}
-    local function RefreshPositionControls()
-        PartyInterruptMonitor.ClampPosition()
-        local minX, maxX, minY, maxY = PartyInterruptMonitor.GetPositionBounds()
-        if positionControls.x then positionControls.x:SetRange(minX, maxX) end
-        if positionControls.y then positionControls.y:SetRange(minY, maxY) end
-    end
-    local function RefreshDisplay()
-        PartyInterruptMonitor.RefreshDisplay()
-        RefreshPositionControls()
-    end
-
-    local enabledCheckButton = CreateFrame("CheckButton", nil, leftPanel, "UICheckButtonTemplate")
+    local enabledCheckButton = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
     enabledCheckButton:SetPoint("TOPLEFT", 0, -4)
     enabledCheckButton:SetScript("OnClick", function(self)
-        PartyInterruptMonitor.SetEnabled(not not self:GetChecked())
-        RefreshPositionControls()
+        CDMColors.SetEnabled(self:GetChecked())
     end)
-    local enabledLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    local enabledLabel = page:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     enabledLabel:SetPoint("LEFT", enabledCheckButton, "RIGHT", 2, 0)
-    enabledLabel:SetText("开启")
+    enabledLabel:SetText("启用")
 
-    local showRealmCheckButton = CreateFrame("CheckButton", nil, leftPanel, "UICheckButtonTemplate")
-    showRealmCheckButton:SetPoint("TOPLEFT", 0, -44)
-    showRealmCheckButton:SetScript("OnClick", function(self)
-        settings.showRealmName = not not self:GetChecked()
-        RefreshDisplay()
+    local buffCheckButton = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
+    buffCheckButton:SetPoint("TOPLEFT", 0, -42)
+    buffCheckButton:SetScript("OnClick", function(self)
+        CDMColors.SetBuffHighlight(self:GetChecked())
     end)
-    local showRealmLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    showRealmLabel:SetPoint("LEFT", showRealmCheckButton, "RIGHT", 2, 0)
-    showRealmLabel:SetText("显示角色服务器名")
-    showRealmCheckButton:SetHitRectInsets(0, -showRealmLabel:GetStringWidth() - 2, 0, 0)
+    local buffLabel = page:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    buffLabel:SetPoint("LEFT", buffCheckButton, "RIGHT", 2, 0)
+    buffLabel:SetText("Buff激活时高亮")
 
-    local decimalPlacesLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    decimalPlacesLabel:SetPoint("TOPLEFT", 4, -96)
-    decimalPlacesLabel:SetText("时间小数位数")
-    local decimalPlacesDropdown = CreateFrame("DropdownButton", nil,
-        leftPanel, "WowStyle1DropdownTemplate")
-    decimalPlacesDropdown:SetPoint("TOPLEFT", 106, -86)
-    decimalPlacesDropdown:SetPoint("TOPRIGHT", -4, -86)
-    local function RefreshDecimalPlacesText()
-        local text = settings.decimalPlaces .. " 位"
-        if decimalPlacesDropdown.OverrideText then
-            decimalPlacesDropdown:OverrideText(text)
-        else
-            decimalPlacesDropdown:SetDefaultText(text)
+    local glowLabel = page:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    glowLabel:SetPoint("TOPLEFT", 4, -92)
+    glowLabel:SetText("发光类型")
+    local dropdown = CreateFrame("DropdownButton", nil, page, "WowStyle1DropdownTemplate")
+    dropdown:SetPoint("TOPLEFT", 106, -82)
+    dropdown:SetWidth(200)
+    local function RefreshGlowText()
+        for _, option in ipairs(CDMColors.GetGlowTypes()) do
+            if settings.glowType == option.key then
+                if dropdown.OverrideText then
+                    dropdown:OverrideText(option.label)
+                else
+                    dropdown:SetDefaultText(option.label)
+                end
+                return
+            end
         end
     end
-    decimalPlacesDropdown:SetupMenu(function(_, rootDescription)
-        for decimalPlaces = 0, 2 do
-            local value = decimalPlaces
-            rootDescription:CreateRadio(value .. " 位", function()
-                return settings.decimalPlaces == value
+    dropdown:SetupMenu(function(_, rootDescription)
+        for _, option in ipairs(CDMColors.GetGlowTypes()) do
+            local key = option.key
+            rootDescription:CreateRadio(option.label, function()
+                return settings.glowType == key
             end, function()
-                settings.decimalPlaces = value
-                RefreshDecimalPlacesText()
-                RefreshDisplay()
+                CDMColors.SetGlowType(key)
+                RefreshGlowText()
             end)
         end
     end)
 
-    local RefreshTextureDropdownText = CreateMediaDropdown(rightPanel,
-        "条材质", -4, "statusbar", settings, "textureKey", PartyInterruptMonitor.DEFAULT_MEDIA_KEY,
-        PartyInterruptMonitor.ValidateTextureKey, RefreshDisplay)
-    local RefreshFontDropdownText = CreateMediaDropdown(rightPanel,
-        "文字字体", -62, "font", settings, "fontKey", PartyInterruptMonitor.DEFAULT_MEDIA_KEY,
-        PartyInterruptMonitor.ValidateFontKey, RefreshDisplay)
+    local reverseCheckButton = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
+    reverseCheckButton:SetPoint("TOPLEFT", 0, -130)
+    reverseCheckButton:SetScript("OnClick", function(self)
+        CDMColors.SetReverseBuffSwipe(self:GetChecked())
+    end)
+    local reverseLabel = page:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    reverseLabel:SetPoint("LEFT", reverseCheckButton, "RIGHT", 2, 0)
+    reverseLabel:SetText("反转技能区Buff状态遮罩进度")
 
-    local function AddSizeControl(labelText, offsetY, key, minimum, maximum)
-        controls[#controls + 1] = CreateIntegerValueSlider(rightPanel,
-            labelText, offsetY, minimum, maximum,
-            function() return settings[key] end, function(value)
-                settings[key] = value
-                RefreshDisplay()
-            end)
-    end
-    AddSizeControl("计时条长度", -118, "width", size.MIN_WIDTH, size.MAX_WIDTH)
-    AddSizeControl("计时条高度", -166, "height", size.MIN_HEIGHT, size.MAX_HEIGHT)
-    AddSizeControl("字体大小", -214, "fontSize", size.MIN_FONT_SIZE, size.MAX_FONT_SIZE)
-    AddSizeControl("文字横坐标偏移", -262, "labelOffsetX", size.MIN_TEXT_OFFSET, size.MAX_TEXT_OFFSET)
-    AddSizeControl("计时横坐标偏移", -310, "timerOffsetX", size.MIN_TEXT_OFFSET, size.MAX_TEXT_OFFSET)
-
-    local positionLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    positionLabel:SetPoint("TOPLEFT", 4, -150)
-    positionLabel:SetText("屏幕位置精确调整")
-    local minX, maxX, minY, maxY = PartyInterruptMonitor.GetPositionBounds()
-    local function AddPositionControl(axis, labelText, offsetY, minimum, maximum)
-        local control = CreateIntegerValueSlider(leftPanel, labelText, offsetY, minimum, maximum,
-            function() return settings[axis] end, function(value)
-                PartyInterruptMonitor.SetCoordinate(axis, value)
-                RefreshPositionControls()
-            end)
-        positionControls[axis] = control
-        controls[#controls + 1] = control
-    end
-    AddPositionControl("x", "X", -182, minX, maxX)
-    AddPositionControl("y", "Y", -238, minY, maxY)
-
-    local function CloseEditors()
-        for _, control in ipairs(controls) do control:CloseEditor(true) end
-    end
-    local function Refresh()
-        enabledCheckButton:SetChecked(settings.enabled)
-        showRealmCheckButton:SetChecked(settings.showRealmName)
-        RefreshDecimalPlacesText()
-        RefreshTextureDropdownText()
-        RefreshFontDropdownText()
-        RefreshPositionControls()
-        for _, control in ipairs(controls) do control:Refresh() end
-    end
-    seventhPage:SetScript("OnShow", Refresh)
-    seventhPage:SetScript("OnSizeChanged", RefreshPositionControls)
-    Refresh()
+    local colorCheckButton = CreateFrame("CheckButton", nil, page, "UICheckButtonTemplate")
+    colorCheckButton:SetPoint("TOPLEFT", 0, -168)
+    colorCheckButton:SetScript("OnClick", function(self)
+        CDMColors.SetOverrideBuffColor(self:GetChecked())
+    end)
+    local colorLabel = page:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    colorLabel:SetPoint("LEFT", colorCheckButton, "RIGHT", 2, 0)
+    colorLabel:SetText("覆盖技能Buff状态遮罩颜色")
+    local buffColorButton = CreateColorOption(page, "Buff遮罩颜色", -212,
+        settings, "buffSwipeColor", CDMColors.Refresh)
 
     return {
-        page = seventhPage,
-        Refresh = Refresh,
-        CloseEditors = CloseEditors,
-        OnConfigHide = CloseEditors,
+        page = page,
+        Refresh = function()
+            enabledCheckButton:SetChecked(settings.enabled)
+            buffCheckButton:SetChecked(settings.buffHighlight)
+            reverseCheckButton:SetChecked(settings.reverseBuffSwipe)
+            colorCheckButton:SetChecked(settings.overrideBuffColor)
+            buffColorButton:Refresh()
+            RefreshGlowText()
+        end,
     }
 end
 
@@ -1790,6 +1729,143 @@ local function CreateAutoInvitePage(content)
     }
 end
 
+local function CreatePartyInterruptMonitorPage(content)
+    local PartyInterruptMonitor = ns.PartyInterruptMonitor
+    local settings = PartyInterruptMonitor.GetSettings()
+    local size = PartyInterruptMonitor.SIZE
+    local seventhPage = CreateFrame("Frame", nil, content)
+    seventhPage:SetAllPoints()
+
+    local leftPanel = CreateFrame("Frame", nil, seventhPage)
+    leftPanel:SetPoint("TOPLEFT")
+    leftPanel:SetPoint("BOTTOMLEFT")
+    leftPanel:SetWidth(210)
+    local rightPanel = CreateFrame("Frame", nil, seventhPage)
+    rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 12, 0)
+    rightPanel:SetPoint("BOTTOMRIGHT")
+
+    local controls, positionControls = {}, {}
+    local function RefreshPositionControls()
+        PartyInterruptMonitor.ClampPosition()
+        local minX, maxX, minY, maxY = PartyInterruptMonitor.GetPositionBounds()
+        if positionControls.x then positionControls.x:SetRange(minX, maxX) end
+        if positionControls.y then positionControls.y:SetRange(minY, maxY) end
+    end
+    local function RefreshDisplay()
+        PartyInterruptMonitor.RefreshDisplay()
+        RefreshPositionControls()
+    end
+
+    local enabledCheckButton = CreateFrame("CheckButton", nil, leftPanel, "UICheckButtonTemplate")
+    enabledCheckButton:SetPoint("TOPLEFT", 0, -4)
+    enabledCheckButton:SetScript("OnClick", function(self)
+        PartyInterruptMonitor.SetEnabled(not not self:GetChecked())
+        RefreshPositionControls()
+    end)
+    local enabledLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    enabledLabel:SetPoint("LEFT", enabledCheckButton, "RIGHT", 2, 0)
+    enabledLabel:SetText("开启")
+
+    local showRealmCheckButton = CreateFrame("CheckButton", nil, leftPanel, "UICheckButtonTemplate")
+    showRealmCheckButton:SetPoint("TOPLEFT", 0, -44)
+    showRealmCheckButton:SetScript("OnClick", function(self)
+        settings.showRealmName = not not self:GetChecked()
+        RefreshDisplay()
+    end)
+    local showRealmLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    showRealmLabel:SetPoint("LEFT", showRealmCheckButton, "RIGHT", 2, 0)
+    showRealmLabel:SetText("显示角色服务器名")
+    showRealmCheckButton:SetHitRectInsets(0, -showRealmLabel:GetStringWidth() - 2, 0, 0)
+
+    local decimalPlacesLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    decimalPlacesLabel:SetPoint("TOPLEFT", 4, -96)
+    decimalPlacesLabel:SetText("时间小数位数")
+    local decimalPlacesDropdown = CreateFrame("DropdownButton", nil,
+        leftPanel, "WowStyle1DropdownTemplate")
+    decimalPlacesDropdown:SetPoint("TOPLEFT", 106, -86)
+    decimalPlacesDropdown:SetPoint("TOPRIGHT", -4, -86)
+    local function RefreshDecimalPlacesText()
+        local text = settings.decimalPlaces .. " 位"
+        if decimalPlacesDropdown.OverrideText then
+            decimalPlacesDropdown:OverrideText(text)
+        else
+            decimalPlacesDropdown:SetDefaultText(text)
+        end
+    end
+    decimalPlacesDropdown:SetupMenu(function(_, rootDescription)
+        for decimalPlaces = 0, 2 do
+            local value = decimalPlaces
+            rootDescription:CreateRadio(value .. " 位", function()
+                return settings.decimalPlaces == value
+            end, function()
+                settings.decimalPlaces = value
+                RefreshDecimalPlacesText()
+                RefreshDisplay()
+            end)
+        end
+    end)
+
+    local RefreshTextureDropdownText = CreateMediaDropdown(rightPanel,
+        "条材质", -4, "statusbar", settings, "textureKey", PartyInterruptMonitor.DEFAULT_MEDIA_KEY,
+        PartyInterruptMonitor.ValidateTextureKey, RefreshDisplay)
+    local RefreshFontDropdownText = CreateMediaDropdown(rightPanel,
+        "文字字体", -62, "font", settings, "fontKey", PartyInterruptMonitor.DEFAULT_MEDIA_KEY,
+        PartyInterruptMonitor.ValidateFontKey, RefreshDisplay)
+
+    local function AddSizeControl(labelText, offsetY, key, minimum, maximum)
+        controls[#controls + 1] = CreateIntegerValueSlider(rightPanel,
+            labelText, offsetY, minimum, maximum,
+            function() return settings[key] end, function(value)
+                settings[key] = value
+                RefreshDisplay()
+            end)
+    end
+    AddSizeControl("计时条长度", -118, "width", size.MIN_WIDTH, size.MAX_WIDTH)
+    AddSizeControl("计时条高度", -166, "height", size.MIN_HEIGHT, size.MAX_HEIGHT)
+    AddSizeControl("字体大小", -214, "fontSize", size.MIN_FONT_SIZE, size.MAX_FONT_SIZE)
+    AddSizeControl("文字横坐标偏移", -262, "labelOffsetX", size.MIN_TEXT_OFFSET, size.MAX_TEXT_OFFSET)
+    AddSizeControl("计时横坐标偏移", -310, "timerOffsetX", size.MIN_TEXT_OFFSET, size.MAX_TEXT_OFFSET)
+
+    local positionLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    positionLabel:SetPoint("TOPLEFT", 4, -150)
+    positionLabel:SetText("屏幕位置精确调整")
+    local minX, maxX, minY, maxY = PartyInterruptMonitor.GetPositionBounds()
+    local function AddPositionControl(axis, labelText, offsetY, minimum, maximum)
+        local control = CreateIntegerValueSlider(leftPanel, labelText, offsetY, minimum, maximum,
+            function() return settings[axis] end, function(value)
+                PartyInterruptMonitor.SetCoordinate(axis, value)
+                RefreshPositionControls()
+            end)
+        positionControls[axis] = control
+        controls[#controls + 1] = control
+    end
+    AddPositionControl("x", "X", -182, minX, maxX)
+    AddPositionControl("y", "Y", -238, minY, maxY)
+
+    local function CloseEditors()
+        for _, control in ipairs(controls) do control:CloseEditor(true) end
+    end
+    local function Refresh()
+        enabledCheckButton:SetChecked(settings.enabled)
+        showRealmCheckButton:SetChecked(settings.showRealmName)
+        RefreshDecimalPlacesText()
+        RefreshTextureDropdownText()
+        RefreshFontDropdownText()
+        RefreshPositionControls()
+        for _, control in ipairs(controls) do control:Refresh() end
+    end
+    seventhPage:SetScript("OnShow", Refresh)
+    seventhPage:SetScript("OnSizeChanged", RefreshPositionControls)
+    Refresh()
+
+    return {
+        page = seventhPage,
+        Refresh = Refresh,
+        CloseEditors = CloseEditors,
+        OnConfigHide = CloseEditors,
+    }
+end
+
 local function CreateConfigFrame()
     local frame = CreateFrame("Frame", FRAME_NAME, UIParent)
     configFrame = frame
@@ -1872,6 +1948,7 @@ local function CreateConfigFrame()
         CreateCooldownViewerSoundsPage(content),
         CreatePartyInterruptMonitorPage(content),
         CreateAutoInvitePage(content),
+        CreateCDMColorsPage(content),
     }
     local categoryButtons = {}
     local selectedCategoryIndex = ns.IsForever and 2 or 1
@@ -1918,6 +1995,7 @@ local function CreateConfigFrame()
         "6.自定义冷却管理器音效",
         "7.队友打断监视",
         "8.自动邀请",
+        "9.CDM颜色管理",
     }
 
     for index, categoryName in ipairs(categoryNames) do
@@ -2019,6 +2097,7 @@ bootFrame:SetScript("OnEvent", function(self, event, ...)
         ns.CooldownViewerSounds.Initialize()
         ns.PartyInterruptMonitor.Initialize()
         ns.AutoInvite.Initialize()
+        ns.CDMColors.Initialize()
     elseif event == "DISPLAY_SIZE_CHANGED" or event == "UI_SCALE_CHANGED" then
         if not ns.IsForever then
             ns.Autoburn.OnDisplayChanged()

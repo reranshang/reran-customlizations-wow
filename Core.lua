@@ -53,15 +53,18 @@ function ns.NormalizeColor(color, defaultColor)
     local red = tonumber(color.r)
     local green = tonumber(color.g)
     local blue = tonumber(color.b)
+    local alpha = tonumber(color.a)
 
     if not red or red ~= red then red = defaultColor.r end
     if not green or green ~= green then green = defaultColor.g end
     if not blue or blue ~= blue then blue = defaultColor.b end
+    if not alpha or alpha ~= alpha then alpha = defaultColor.a or 1 end
 
     return {
         r = ns.Clamp(red, 0, 1),
         g = ns.Clamp(green, 0, 1),
         b = ns.Clamp(blue, 0, 1),
+        a = ns.Clamp(alpha, 0, 1),
     }
 end
 

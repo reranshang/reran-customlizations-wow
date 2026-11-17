@@ -9,28 +9,6 @@ local MARKER_ASSIGNMENT_PREFIX = "RRC_TM3"
 local MARKER_ASSIGNMENT_PROTOCOL_VERSION = "2"
 local MARKER_ASSIGNMENT_MACRO_NAME = "RRC-TM"
 local MARKER_ASSIGNMENT_MACRO_ICON = 134400
-local MARKER_ASSIGNMENT_DEFAULT_CHAT_TEXT = "我焦点打断-%f"
--- Reserve space for the longest macro form (raid guard, non-overwriting mark, /raid).
-local MARKER_ASSIGNMENT_CHAT_TEXT_MAX_BYTES = 255 - #table.concat({
-    "/clearfocus",
-    "/focus [@mouseover,harm,nodead][@target,harm,nodead]",
-    "/stopmacro [@focus,noexists][@focus,dead][@focus,help]",
-    "/stopmacro [group:raid]",
-    "/tm [@focus] ~8",
-    "/stopmacro [nogroup]",
-    "/raid ",
-}, "\n")
-
-local function NormalizeMarkerAssignmentChatText(value)
-    if (IsSecretValue and IsSecretValue(value)) or type(value) ~= "string" then
-        return MARKER_ASSIGNMENT_DEFAULT_CHAT_TEXT
-    end
-    value = value:gsub("[\r\n]", " ")
-    if #value > MARKER_ASSIGNMENT_CHAT_TEXT_MAX_BYTES then
-        return MARKER_ASSIGNMENT_DEFAULT_CHAT_TEXT
-    end
-    return value
-end
 local MARKER_ASSIGNMENT_CHAT_PARTY_RAID = "PARTY_RAID"
 local MARKER_ASSIGNMENT_CHAT_INSTANCE = "INSTANCE"
 local MARKER_ASSIGNMENT_COUNT = 8
@@ -633,15 +611,12 @@ local function BuildMarkerAssignmentMacroBody(marker)
         lines[#lines + 1] = "/stopmacro [group:raid]"
     end
     if marker then
-        local prefix = markerAssignmentSettings.overwriteExistingMarkers and "" or "~"
-        lines[#lines + 1] = "/tm [@focus] " .. prefix .. marker
+        lines[#lines + 1] = "/tm [@focus] ~" .. marker
     end
     lines[#lines + 1] = "/stopmacro [nogroup]"
 
     local chatCommand = GetMarkerAssignmentChatCommand()
-    if markerAssignmentSettings.chatText ~= "" then
-        lines[#lines + 1] = chatCommand .. " " .. markerAssignmentSettings.chatText
-    end
+    lines[#lines + 1] = chatCommand .. " 我焦点打断-%f"
     return table.concat(lines, "\n")
 end
 
@@ -1328,22 +1303,6 @@ local function SetMarkerAssignmentAllowInRaid(enabled)
     RefreshMarkerAssignmentUI()
 end
 
-local function SetMarkerAssignmentOverwriteExistingMarkers(enabled)
-    markerAssignmentSettings.overwriteExistingMarkers = not not enabled
-    if markerAssignmentSettings.enabled then
-        ApplyMarkerAssignmentMacro(markerAssignmentSettings.assignedMarker)
-    end
-    RefreshMarkerAssignmentUI()
-end
-
-local function SetMarkerAssignmentChatText(text)
-    markerAssignmentSettings.chatText = NormalizeMarkerAssignmentChatText(text)
-    if markerAssignmentSettings.enabled then
-        ApplyMarkerAssignmentMacro(markerAssignmentSettings.assignedMarker)
-    end
-    RefreshMarkerAssignmentUI()
-end
-
 local function ToggleMarkerAssignmentDisabled(marker)
     if not NormalizeMarkerAssignmentID(marker) then
         return
@@ -1386,11 +1345,6 @@ RefreshMarkerAssignmentUI = function()
         markerAssignmentControls.enabledCheckButton:SetChecked(markerAssignmentSettings.enabled)
         markerAssignmentControls.allowInRaidCheckButton:SetChecked(
             markerAssignmentSettings.allowInRaid)
-        markerAssignmentControls.overwriteExistingMarkersCheckButton:SetChecked(
-            markerAssignmentSettings.overwriteExistingMarkers)
-        if not markerAssignmentControls.chatTextInput:HasFocus() then
-            markerAssignmentControls.chatTextInput:SetText(markerAssignmentSettings.chatText)
-        end
         local channelText = GetMarkerAssignmentChatChannelLabel()
         if markerAssignmentControls.chatChannelDropdown.OverrideText then
             markerAssignmentControls.chatChannelDropdown:OverrideText(channelText)
@@ -1590,10 +1544,6 @@ local function InitializeMarkerAssignmentSettings(db)
     if type(markerSettings.allowInRaid) ~= "boolean" then
         markerSettings.allowInRaid = false
     end
-    if type(markerSettings.overwriteExistingMarkers) ~= "boolean" then
-        markerSettings.overwriteExistingMarkers = false
-    end
-    markerSettings.chatText = NormalizeMarkerAssignmentChatText(markerSettings.chatText)
     markerAssignmentSettings = markerSettings
 end
 
@@ -1614,9 +1564,6 @@ ns.MarkerAssignment = {
     SetEnabled = SetMarkerAssignmentEnabled,
     SetChatChannelMode = SetMarkerAssignmentChatChannelMode,
     SetAllowInRaid = SetMarkerAssignmentAllowInRaid,
-    SetOverwriteExistingMarkers = SetMarkerAssignmentOverwriteExistingMarkers,
-    SetChatText = SetMarkerAssignmentChatText,
-    CHAT_TEXT_MAX_BYTES = MARKER_ASSIGNMENT_CHAT_TEXT_MAX_BYTES,
     ToggleDisabled = ToggleMarkerAssignmentDisabled,
     RefreshUI = RefreshMarkerAssignmentUI,
     Initialize = InitializeMarkerAssignment,

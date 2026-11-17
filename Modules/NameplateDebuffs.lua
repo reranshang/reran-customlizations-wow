@@ -24,8 +24,8 @@ local NAMEPLATE_DEBUFF_MAX_SPELLS = 16
 local NAMEPLATE_DEBUFF_GAP = 1
 local NAMEPLATE_DEBUFF_FILTER = "HARMFUL|PLAYER|INCLUDE_NAME_PLATE_ONLY"
 local NAMEPLATE_DEBUFF_DEFAULT_COLORS = {
-    noBuffColor = { r = 1, g = 1, b = 1 },
-    hasBuffColor = { r = 0.10, g = 0.45, b = 1.00 },
+    noBuffColor = { r = 1, g = 1, b = 1, a = 1 },
+    hasBuffColor = { r = 0.10, g = 0.45, b = 1.00, a = 1 },
 }
 
 local nameplateDebuffSettings
@@ -282,10 +282,10 @@ local function EnsureNameplateDebuffPreviewSquare(index)
     local noBuffColor = nameplateDebuffSettings.noBuffColor
     local hasBuffColor = nameplateDebuffSettings.hasBuffColor
     square.white = CreateSolidTexture(square, "BACKGROUND",
-        noBuffColor.r, noBuffColor.g, noBuffColor.b, 1)
+        noBuffColor.r, noBuffColor.g, noBuffColor.b, noBuffColor.a)
     square.white:SetAllPoints()
     square.blue = CreateSolidTexture(square, "ARTWORK",
-        hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, 1)
+        hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, hasBuffColor.a)
     square.blue:SetPoint("TOPLEFT", 1, -1)
     square.blue:SetPoint("BOTTOMRIGHT", -1, 1)
     AddBorder(square, 1, 0.05, 0.05, 0.07, 1)
@@ -399,7 +399,7 @@ local function CreateNameplateDebuffHost()
     local noBuffColor = nameplateDebuffSettings.noBuffColor
     local hasBuffColor = nameplateDebuffSettings.hasBuffColor
     host.white = CreateSolidTexture(host, "BACKGROUND",
-        noBuffColor.r, noBuffColor.g, noBuffColor.b, 1)
+        noBuffColor.r, noBuffColor.g, noBuffColor.b, noBuffColor.a)
     host.white:SetAllPoints()
     AddBorder(host, 1, 0.05, 0.05, 0.07, 1)
 
@@ -413,7 +413,7 @@ local function CreateNameplateDebuffHost()
     host.blueGate = CreateFrame("Frame", nil, container)
     host.blueGate:SetFrameLevel(container:GetFrameLevel() + 1)
     host.blueTexture = CreateSolidTexture(host.blueGate, "ARTWORK",
-        hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, 1)
+        hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, hasBuffColor.a)
     host.blueTexture:SetAllPoints()
     host.groups = {}
     host:Hide()
@@ -431,12 +431,12 @@ ApplyNameplateDebuffColors = function()
     local noBuffColor = nameplateDebuffSettings.noBuffColor
     local hasBuffColor = nameplateDebuffSettings.hasBuffColor
     for _, square in ipairs(nameplateDebuffPreviewSquares) do
-        square.white:SetColorTexture(noBuffColor.r, noBuffColor.g, noBuffColor.b, 1)
-        square.blue:SetColorTexture(hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, 1)
+        square.white:SetColorTexture(noBuffColor.r, noBuffColor.g, noBuffColor.b, noBuffColor.a)
+        square.blue:SetColorTexture(hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, hasBuffColor.a)
     end
     for _, host in ipairs(nameplateDebuffHosts) do
-        host.white:SetColorTexture(noBuffColor.r, noBuffColor.g, noBuffColor.b, 1)
-        host.blueTexture:SetColorTexture(hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, 1)
+        host.white:SetColorTexture(noBuffColor.r, noBuffColor.g, noBuffColor.b, noBuffColor.a)
+        host.blueTexture:SetColorTexture(hasBuffColor.r, hasBuffColor.g, hasBuffColor.b, hasBuffColor.a)
     end
 end
 

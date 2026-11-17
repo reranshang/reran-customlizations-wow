@@ -1,6 +1,6 @@
 本项目（**ReRan's Customlizations - aka - RRC**）是作者作为个人魔兽世界玩家，根据自身对插件功能的理解和需求而开发的一款自定义插件，旨在添加一些简单的功能到游戏中。
 
-## 功能在2026年11月14日的版本中包含如下:
+## 当前功能（2026年11月17日）:
 
 1. **DK自动血沸监视**：监视沸点触发，并使用一个计时条提醒是否有沸点血沸即将来临
 
@@ -18,9 +18,18 @@
 
 8. **自动邀请**：当选定的频道中有玩家发送了您自定义的字符串后，您会自动邀请该角色加入您的队伍或团队。
 
+9. **CDM颜色管理**：支持原生 CDM 重要/效能技能及 vFlow 技能分组，可独立开启 Buff 高亮、遮罩进度反转和颜色覆盖。高亮默认触发发光；颜色支持透明度，默认半透明黑色。反转配合黑色遮罩可使已过部分变暗、剩余部分保留原图标。设置账号通用，不改动计时；vFlow“仅技能冷却”模式下不应用 Buff 效果，无法安全判断的状态跳过操作。
+
 ---
 
-在游戏中，您可以通过`/rrc`来显示配置面板，以进行自定义**角色配置**（本项目所有配置都是以角色配置划分）
+在游戏中，您可以通过`/rrc`来显示配置面板。设置按以下范围保存：
+
+- **账号通用**：功能4（隐藏bigwigs计时）、6（自定义冷却管理器音效）、7（队友打断监视）、8（自动邀请）、9（CDM颜色管理）。同一账号下的角色共用这些功能的 RRC 设置。
+- **角色独立**：功能1（DK自动血沸监视）、2（姓名板Debuff监测）、3（标记分配）、5（集合石屏蔽）。
+- 功能3的设置按角色保存，但新建的 `RRC-TM` 宏为**账号通用宏**；宏的保存范围不等于该功能设置的保存范围。
+- 功能6、9的账号共享范围仅指 RRC 自身设置，不会改变暴雪 CDM 或 vFlow 的布局、技能列表和提醒配置的保存范围。
+
+账号通用功能首次迁移旧角色设置时，仅在对应账号设置尚不存在的情况下继承当前角色设置；后续角色不会覆盖已有账号设置。
 
 本项目是一个纯粹由AI实现的项目，对于代码的实现合理度与精简度未做任何审查。
 
@@ -42,13 +51,13 @@
 
 This project (**ReRan's Customlizations - aka - RRC**) is a custom addon developed by the author as an individual World of Warcraft player, based on their own understanding of and needs for addon functionality, with the aim of adding some simple features to the game.
 
-## Features included in the November 14, 2026 version:
+## Current features (November 17, 2026):
 
 1. **DK automatic Blood Boil monitoring**: Monitors Boiling Point procs and uses a timer bar to indicate whether a Boiling Point Blood Boil is coming up
 
 2. **Nameplate debuff monitoring**: Uses information obtained from nameplates to display how many enemy units are currently affected by the debuffs you are monitoring (such as DoTs)
 
-3. **Marker assignment**: Synchronizes information among all players with RRC installed to assign each player a different focus marker. This requires using the `RRC-MS` macro automatically created by RRC. Using this macro announces your current focus target to your party (or raid, if you enable that option) and marks it. By default, marking does not overwrite any existing markers (for example, if enemy 1 is marked with a skull and your marker is a star, the macro will not overwrite the skull), but you can check “Overwrite existing markers” to allow the macro to overwrite markers.
+3. **Marker assignment**: Synchronizes information among all players with RRC installed to assign each player a different focus marker. This requires using the `RRC-TM` macro automatically created by RRC. Using this macro announces your current focus target to your party (or raid, if you enable that option) and marks it. By default, marking does not overwrite any existing markers (for example, if enemy 1 is marked with a skull and your marker is a star, the macro will not overwrite the skull), but you can check “Overwrite existing markers” to allow the macro to overwrite markers.
 
 4. **Hide bigwigs timers**: This feature was designed because EXBOSS's information in the center of the screen is somewhat unattractive, while bigwigs does not have a Mythic+ trash ability timeline. The feature is intended to hide bigwigs timer bars during Mythic+ combat (including bigwigs timer bars managed by ability timeline/better timeline), retaining EXBOSS timer bars and bigwigs text alerts for important abilities; meanwhile, it hides EXBOSS timer bars in raids so that combat alerts are handled entirely by bigwigs. When enabled, bigwigs timer bars are hidden in both dungeons and raids. After checking “Disable timer bars only in dungeons,” bigwigs timer bars will no longer be disabled in raids.
 
@@ -60,9 +69,18 @@ This project (**ReRan's Customlizations - aka - RRC**) is a custom addon develop
 
 8. **Automatic invitations**: When a player sends your custom string in a selected channel, you automatically invite that character to your party or raid.
 
+9. **CDM color management**: Supports native CDM essential/utility skills and vFlow skill groups, with independent Buff glow, swipe reversal, and color override options. Defaults: proc glow and semi-transparent black. Reversal with a black swipe darkens elapsed time while leaving the remaining portion unobscured. Settings are account-wide; timers are unchanged. Buff effects are inactive in vFlow's spell-cooldown-only mode, and operations requiring unreadable state are skipped.
+
 ---
 
-In-game, you can use `/rrc` to display the configuration panel and customize **character profiles** (all configuration in this project is organized by character profile)
+Use `/rrc` in-game to open the configuration panel. Settings are saved with the following scopes:
+
+- **Account-wide**: Features 4 (Hide bigwigs timers), 6 (Custom Cooldown Manager sounds), 7 (Teammate interrupt monitoring), 8 (Automatic invitations), and 9 (CDM color management). Characters on the same account share these RRC settings.
+- **Per-character**: Features 1 (DK automatic Blood Boil monitoring), 2 (Nameplate debuff monitoring), 3 (Marker assignment), and 5 (Meeting Stone blocking).
+- Feature 3 saves its settings per character, but newly created `RRC-TM` macros are **account-wide macros**. Macro scope and feature settings scope are separate.
+- Account-wide sharing for features 6 and 9 applies only to RRC's own settings; it does not change how Blizzard CDM or vFlow saves layouts, tracked spell lists, or alert configurations.
+
+When migrating legacy per-character settings for an account-wide feature, the current character's settings are inherited only if that feature has no account settings yet. Subsequent characters do not overwrite existing account settings.
 
 This project was implemented entirely by AI. No review has been conducted of the code's implementation quality or conciseness.
 

@@ -40,8 +40,8 @@ local AUTOBURN_DEFAULT_Y = -180
 local AUTOBURN_DEFAULT_LABEL = "autoburn"
 local AUTOBURN_DEFAULT_MEDIA_KEY = "__default"
 local AUTOBURN_DEFAULT_TEXTURE = "Interface\\Buttons\\WHITE8X8"
-local AUTOBURN_DEFAULT_READY_COLOR = { r = 0.10, g = 0.45, b = 1.00 }
-local AUTOBURN_DEFAULT_BLOCKED_COLOR = { r = 0.90, g = 0.10, b = 0.10 }
+local AUTOBURN_DEFAULT_READY_COLOR = { r = 0.10, g = 0.45, b = 1.00, a = 1 }
+local AUTOBURN_DEFAULT_BLOCKED_COLOR = { r = 0.90, g = 0.10, b = 0.10, a = 1 }
 
 local NamespacedIsSpellOverlayed = C_SpellActivationOverlay
     and C_SpellActivationOverlay.IsSpellOverlayed
@@ -497,7 +497,7 @@ local function SetAutoburnColor(colorState)
     elseif colorState == "full" then
         color = settings.fullBarColor
     end
-    autoburnBar:SetStatusBarColor(color.r, color.g, color.b, 1)
+    autoburnBar:SetStatusBarColor(color.r, color.g, color.b, color.a)
 end
 
 ApplyAutoburnAppearance = function()
