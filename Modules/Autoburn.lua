@@ -927,8 +927,7 @@ local function InitializeAutoburnSettings(db)
     settings = db.autoburn
 
     if type(settings.enabled) ~= "boolean" then
-        local _, classFilename = UnitClass("player")
-        settings.enabled = classFilename == "DEATHKNIGHT"
+        settings.enabled = false
     end
 
     settings.duration = ParseDuration(settings.duration) or AUTOBURN_DEFAULT_DURATION
