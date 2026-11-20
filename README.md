@@ -2,23 +2,23 @@
 
 ## 当前功能（2026年11月17日）:
 
-1. **DK自动血沸监视**：监视沸点触发，并使用一个计时条提醒是否有沸点血沸即将来临
+1. **DK自动血沸监视**：监视沸点触发，并使用一个计时条提醒是否有沸点血沸即将来临。
 
-2. **姓名板Debuff监测**：基于对姓名板信息的获取，实现显示有多少敌方单位正受您目前监控的debuff（如dot）的影响
+2. **姓名板Debuff监测**：基于对姓名板信息的获取，实现显示有多少敌方单位正受您目前监控的debuff（如dot）的影响。
 
-3. **标记分配**：在所有安装了RRC的玩家中同步信息，以为每位玩家分配不同的焦点标记，需配合RRC自动创建的`RRC-TM`宏使用。使用该宏会让您在小队（或团队，当您开启该选项）中通报您当前设置焦点的单位，并进行标记。标记的原则是不覆盖任何已有的标记（如怪物1被标记了骷髅，您的标记是星星，该宏不会覆盖骷髅），但您可以勾选“覆盖已有标记”，以让该宏覆盖标记。
+3. **标记分配**：在所有安装了RRC的玩家中同步信息，以为每位玩家分配不同的焦点标记，需配合RRC自动创建的`RRC-TM`宏使用。使用该宏会让您在小队（或团队，当您开启该选项）中通报您当前设置焦点的单位，并进行标记。标记的原则是不覆盖任何已有的标记（如怪物1被标记了骷髅，您的标记是星星，该宏不会覆盖骷髅），但您可以勾选“覆盖已有标记”，以让该宏覆盖标记。本设置为角色设置，但`RRC-TM`为账号通用宏。
 
-4. **隐藏bigwigs计时**：由于EXBOSS的屏幕中心信息有点不美观，而bigwigs又不具有大秘境小怪技能时间轴，故设计本功能。本功能旨在大秘境战斗中隐藏bigwigs计时条（包含由ability timeline/better timeline接管的bigwigs计时条），进而保留EXBOSS计时条及bigwigs重要技能文字提醒；同时在团队副本中屏蔽EXBOSS计时条，进而完全使用bigwigs实现战斗提示。启用后，bigwigs计时条会在地下城和团队副本中都被隐藏，勾选“仅在地下城中关闭计时条”后，团队副本内，bigwigs计时条不再被关闭。
+4. **隐藏bigwigs计时**：由于EXBOSS的屏幕中心信息有点不美观，而bigwigs又不具有大秘境小怪技能时间轴，故设计本功能。本功能旨在大秘境战斗中隐藏bigwigs计时条（包含由ability timeline/better timeline接管的bigwigs计时条），进而保留EXBOSS计时条及bigwigs重要技能文字提醒；同时在团队副本中屏蔽EXBOSS计时条，进而完全使用bigwigs实现战斗提示。启用后，bigwigs计时条会在地下城和团队副本中都被隐藏，勾选“仅在地下城中关闭计时条”后，团队副本内，bigwigs计时条不再被关闭。本设置为账号通用。
 
 5. **集合石屏蔽**：本功能旨在实现集合石队名关键字实现集合石屏蔽。但由于it's secret改动，对于关键字的识别必须在游戏外实现。本功能的使用方式为：打开集合石，刷新一次后打开RRC，读取列表。 使用外部程序将所有列表页面截图保存，之后使用`RRC_MS`程序，通过调用您的windows ocr实现关键字识别筛选，`RRC_MS`会为您返回一个字符串，在游戏内的RRC导入该字符串，会按照对应的队长名实现屏蔽。
 
-6. **自定义冷却管理器音效**：开启本功能后，您可以在游戏内自带的冷却管理器（Cooldown manager,`/CDM`）的添加音效提示中，选择您已经加载到游戏内的任何音效，而不限于原本的少数可选音效。（例如，您可以对嗜血BUFF设置一个激情澎湃的媒体）
+6. **自定义冷却管理器音效**：开启本功能后，您可以在游戏内自带的冷却管理器（Cooldown manager,`/CDM`）的添加音效提示中，选择您已经加载到游戏内的任何音效，而不限于原本的少数可选音效。（例如，您可以对嗜血BUFF设置一个激情澎湃的媒体）本设置为账号通用。
 
-7. **队友打断监视**：以计时条形式监视队友打断CD。本功能受限于it's secret改动，只有当队友打断成功时才会开始CD计时（对于自己的玩家角色无此问题）。该功能的实现中，“使用暴雪伤害统计”来验证打断成功的思路源自Kira ui
+7. **队友打断监视**：以计时条形式监视队友打断CD。本功能受限于it's secret改动，只有当队友打断成功时才会开始CD计时（对于自己的玩家角色无此问题）。该功能的实现中，“使用暴雪伤害统计”来验证打断成功的思路源自Kira UI. 本设置为账号通用。
 
-8. **自动邀请**：当选定的频道中有玩家发送了您自定义的字符串后，您会自动邀请该角色加入您的队伍或团队。
+8. **自动邀请**：当选定的频道中有玩家发送了您自定义的字符串后，您会自动邀请该角色加入您的队伍或团队。本设置为账号通用。
 
-9. **CDM颜色管理**：支持原生 CDM 重要/效能技能及 vFlow 技能分组，可独立开启 Buff 高亮、遮罩进度反转和颜色覆盖。高亮默认触发发光；颜色支持透明度，默认半透明黑色。反转配合黑色遮罩可使已过部分变暗、剩余部分保留原图标。设置账号通用，不改动计时；vFlow“仅技能冷却”模式下不应用 Buff 效果，无法安全判断的状态跳过操作。
+9. **CDM颜色管理**：支持原生 CDM 重要/效能技能及 vFlow 技能分组，可独立开启 Buff 高亮、遮罩进度反转和颜色覆盖。高亮默认触发发光，视觉上可令您的冷却监视器中的技能对应Buff显示更接近右上原生Buff触发。本设置为账号通用。
 
 ---
 
@@ -53,23 +53,23 @@ This project (**ReRan's Customlizations - aka - RRC**) is a custom addon develop
 
 ## Current features (November 17, 2026):
 
-1. **DK automatic Blood Boil monitoring**: Monitors Boiling Point procs and uses a timer bar to indicate whether a Boiling Point Blood Boil is coming up
+1. **DK automatic Blood Boil monitoring**: Monitors Boiling Point procs and uses a timer bar to indicate whether a Boiling Point Blood Boil is coming up.
 
-2. **Nameplate debuff monitoring**: Uses information obtained from nameplates to display how many enemy units are currently affected by the debuffs you are monitoring (such as DoTs)
+2. **Nameplate debuff monitoring**: Uses information obtained from nameplates to display how many enemy units are currently affected by the debuffs you are monitoring (such as DoTs).
 
-3. **Marker assignment**: Synchronizes information among all players with RRC installed to assign each player a different focus marker. This requires using the `RRC-TM` macro automatically created by RRC. Using this macro announces your current focus target to your party (or raid, if you enable that option) and marks it. By default, marking does not overwrite any existing markers (for example, if enemy 1 is marked with a skull and your marker is a star, the macro will not overwrite the skull), but you can check “Overwrite existing markers” to allow the macro to overwrite markers.
+3. **Marker assignment**: Synchronizes information among all players with RRC installed to assign each player a different focus marker. This requires using the `RRC-TM` macro automatically created by RRC. Using this macro announces your current focus target to your party (or raid, if you enable that option) and marks it. By default, marking does not overwrite any existing markers (for example, if enemy 1 is marked with a skull and your marker is a star, the macro will not overwrite the skull), but you can check “Overwrite existing markers” to allow the macro to overwrite markers. Settings are saved per character, but `RRC-TM` is an account-wide macro.
 
-4. **Hide bigwigs timers**: This feature was designed because EXBOSS's information in the center of the screen is somewhat unattractive, while bigwigs does not have a Mythic+ trash ability timeline. The feature is intended to hide bigwigs timer bars during Mythic+ combat (including bigwigs timer bars managed by ability timeline/better timeline), retaining EXBOSS timer bars and bigwigs text alerts for important abilities; meanwhile, it hides EXBOSS timer bars in raids so that combat alerts are handled entirely by bigwigs. When enabled, bigwigs timer bars are hidden in both dungeons and raids. After checking “Disable timer bars only in dungeons,” bigwigs timer bars will no longer be disabled in raids.
+4. **Hide bigwigs timers**: This feature was designed because EXBOSS's information in the center of the screen is somewhat unattractive, while bigwigs does not have a Mythic+ trash ability timeline. The feature is intended to hide bigwigs timer bars during Mythic+ combat (including bigwigs timer bars managed by ability timeline/better timeline), retaining EXBOSS timer bars and bigwigs text alerts for important abilities; meanwhile, it hides EXBOSS timer bars in raids so that combat alerts are handled entirely by bigwigs. When enabled, bigwigs timer bars are hidden in both dungeons and raids. After checking “Disable timer bars only in dungeons,” bigwigs timer bars will no longer be disabled in raids. Settings are account-wide.
 
 5. **Meeting Stone blocking**: This feature is intended to block Meeting Stone groups based on keywords in group names. However, due to the it's secret changes, keyword recognition must be performed outside the game. To use this feature: open Meeting Stone, refresh once, then open RRC and read the list. Use an external program to capture and save screenshots of all list pages, then use the `RRC_MS` program to recognize and filter keywords through your windows ocr. `RRC_MS` will return a string; importing that string into RRC in-game will block entries based on the corresponding group leaders' names.
 
-6. **Custom Cooldown Manager sounds**: After enabling this feature, when adding sound alerts in the game's built-in Cooldown Manager (Cooldown manager,`/CDM`), you can select any sound you have loaded into the game, rather than being limited to the few original options. (For example, you can assign an energetic media clip to the Bloodlust buff)
+6. **Custom Cooldown Manager sounds**: After enabling this feature, when adding sound alerts in the game's built-in Cooldown Manager (Cooldown manager,`/CDM`), you can select any sound you have loaded into the game, rather than being limited to the few original options. (For example, you can assign an energetic media clip to the Bloodlust buff.) Settings are account-wide.
 
-7. **Teammate interrupt monitoring**: Monitors teammates' interrupt cooldowns using timer bars. This feature is limited by the it's secret changes: cooldown tracking begins only when a teammate successfully interrupts (this limitation does not apply to your own player character). In the implementation of this feature, the idea of “using Blizzard's damage statistics” to verify successful interrupts came from Kira ui
+7. **Teammate interrupt monitoring**: Monitors teammates' interrupt cooldowns using timer bars. This feature is limited by the it's secret changes: cooldown tracking begins only when a teammate successfully interrupts (this limitation does not apply to your own player character). In the implementation of this feature, the idea of “using Blizzard's damage statistics” to verify successful interrupts came from Kira UI. Settings are account-wide.
 
-8. **Automatic invitations**: When a player sends your custom string in a selected channel, you automatically invite that character to your party or raid.
+8. **Automatic invitations**: When a player sends your custom string in a selected channel, you automatically invite that character to your party or raid. Settings are account-wide.
 
-9. **CDM color management**: Supports native CDM essential/utility skills and vFlow skill groups, with independent Buff glow, swipe reversal, and color override options. Defaults: proc glow and semi-transparent black. Reversal with a black swipe darkens elapsed time while leaving the remaining portion unobscured. Settings are account-wide; timers are unchanged. Buff effects are inactive in vFlow's spell-cooldown-only mode, and operations requiring unreadable state are skipped.
+9. **CDM color management**: Supports native CDM Essential/Utility abilities and vFlow ability groups, with independently enabled buff highlighting, cooldown swipe reversal, and color override options. Highlighting uses a proc glow by default, making the corresponding buff indicators in your cooldown viewers look more like the native buff procs in the top-right corner. Settings are account-wide.
 
 ---
 
